@@ -47,5 +47,9 @@ This robot is using SyncRead and SyncWrite from Dynamixel SDK for position addre
 	float RobotAng[3];
 	DRC.GetRobotAngle(RobotAng);
 ```
-This function will read
+This function will read the angle of the robot kinematics, for example, from following image...
+
+![](image/simplekinematics.PNG)
+
+From above image, the `RobotAng[3]` that will get from `GetRobotAngle()` function is (+deg1,+deg2,-deg3). The dashed line in the image is a reference line that always horizontal fixed
   
