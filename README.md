@@ -67,7 +67,38 @@ DRC.GotoPoint(200,-200,-800);
 ![](image/workingrange.PNG)
 
 The robot can go around in the circle of maxR = 500, you shouldn't change this value because this is the mechanical constraint of this robot. You can change the `minStoke` and `maxStoke` in DeltaRobotClass.h according to your application to prevent the robot to go over your limit.
-If the speed is too fast or too slow, you can change the value in `DEFAULT_TIMEACC` and `DEFAULT_TIMESPAN` which are a profile generation values.
+For example, I tested the robot and found that there is some point that the robot cannot go in mathematically, which means given that point the inverse kinematics cannot calculate due to it really close to singularity posture, so I made the new working space as following picture 
+
+![](image/workspace.PNG)
+
+and add some constraint at `XYZOutRange(X,Y,Z)` function to detect strange value of XYZ input from user. At that function...
+```
+int DeltaRobotClass::XYZOutRange(float X, float Y, float Z)
+{
+	int WarningFlag = 0;
+	float workingR;
+	float maxZ;
+
+	workingR = sqrt(pow(X,2) + pow(Y,2));
+	
+	maxZ = 0.75*workingR - 1225.0;
+
+	if ( (workingR > maxR) || (Z < maxStoke) || (Z < maxZ) || (Z > minStoke) )
+	{
+		WarningFlag = 1;
+		printf("XYZOutRange: input value is invalid, try change X, Y or Z \n");
+	}
+	else
+	{
+		WarningFlag = 0;
+	}
+
+	return WarningFlag;
+}
+```
+First you can see that, the function brings X,Y to calculate the working radius of desired point as `workingR`, after that according to your `workingR`, the maximum Z value that the robot can go is calculated as `maxZ = 0.75*workingR - 1225.0;`. This linear function is from the slope line at the bottom part of working space, so it means if your input Z is upper than that line, the robot can move.
+
+If the speed is too fast or too slow, you can change the value in `DEFAULT_TIMEACC` and `DEFAULT_TIMESPAN` which are a profile generation values. I always set `DEFAULT_TIMEACC` around half of the `DEFAULT_TIMESPAN` or a bit lower, to make robot moves smoothly.
 
 At the end of script, you will see this comment while loop
 ```
