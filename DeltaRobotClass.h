@@ -101,9 +101,11 @@ using namespace std::chrono;
 #define GRIPPER_CURRENT_LIMIT			1193		// limit of current [Raw value]
 #define GRIPPER_GOAL_CURRENT			500			// This will set how hard the gripper can grab [Raw value]
 
-//Workspace limitations
+//Workspace limitations, refer to the working range diagram for more detail.
 #define maxR							500.0 		// A radius of full working range circle	[mm]
-#define minStoke						-400.0		// minimum stoke that the robot can go up   [mm]
+#define minR 							300.0		// A minimum radius when full stoke 		[mm]
+#define minStoke						-350.0		// minimum stoke that the robot can go up   [mm]
+#define midStoke						-850.0		// max stoke when working radius is maxR 	[mm] 
 #define maxStoke						-1000.0 	// maximum stoke that the robot can go down [mm]
 #define homeHeight						-551.5149	// with this height and x=0,y=0, all of the proximal arm will strecth out parallel to the ground (or 180deg for all servo) [mm]
 

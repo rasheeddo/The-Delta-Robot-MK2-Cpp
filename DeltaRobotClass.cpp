@@ -49,11 +49,15 @@ DeltaRobotClass::DeltaRobotClass()
 	FFGAIN_MODE3_2nd = 50;
 
 	//Operation speed of gripper and robot [msec]
-	DEFAULT_TIMEACC = 300;			// This value tell the acceraletion/decerelation time of the robot (MUST lower than DEFAULT_TIMESPAN) [msec]
-	DEFAULT_TIMESPAN = 1000;		// This value tell how long does the robot need to take to complete motion in [msec]
+	DEFAULT_TIMEACC = 1000;			// This value tell the acceraletion/decerelation time of the robot (MUST lower than DEFAULT_TIMESPAN) [msec]
+	DEFAULT_TIMESPAN = 2000;		// This value tell how long does the robot need to take to complete motion in [msec]
 
-	GRIPPER_Ta = 300;			// Similar as DEFAULT_TIMEACC, but for gripper
-	GRIPPER_Tf = 1000;			// Similar as DEFAULT_TIMESPAN, but for gripper
+	GRIPPER_Ta = 350;			// Similar as DEFAULT_TIMEACC, but for gripper
+	GRIPPER_Tf = 500;			// Similar as DEFAULT_TIMESPAN, but for gripper
+	
+	GRIPPER_PID_P = 1000;
+	GRIPPER_PID_I = 100;
+	GRIPPER_PID_D = 4000;;
 
 };
 
@@ -949,6 +953,8 @@ void DeltaRobotClass::RobotInit(int mode)
 	}
 	//Gripper initialization
 	SetPID(DXL4_ID, GRIPPER_PID_P, GRIPPER_PID_I, GRIPPER_PID_D);
+	SetCurrentLimit(DXL4_ID, GRIPPER_CURRENT_LIMIT);
+	SetGoalCurrent(DXL4_ID, GRIPPER_GOAL_CURRENT);
 
 	SetTimeProfile(DXL1_ID, DEFAULT_TIMEACC, DEFAULT_TIMESPAN);
 	SetTimeProfile(DXL2_ID, DEFAULT_TIMEACC, DEFAULT_TIMESPAN);
@@ -1015,11 +1021,16 @@ int DeltaRobotClass::XYZOutRange(float X, float Y, float Z)
 {
 	int WarningFlag = 0;
 	float workingR;
+	float maxZ;
 
 	workingR = sqrt(pow(X,2) + pow(Y,2));
-	if ( (workingR > maxR) || (Z < maxStoke) || (Z > minStoke))
+	
+	maxZ = 0.75*workingR - 1225.0;
+
+	if ( (workingR > maxR) || (Z < maxStoke) || (Z < maxZ) || (Z > minStoke) )
 	{
 		WarningFlag = 1;
+		printf("XYZOutRange: input value is invalid, try change X, Y or Z \n");
 	}
 	else
 	{
@@ -1069,12 +1080,19 @@ void DeltaRobotClass::GotoPoint(float X, float Y, float Z)
 		GoalAngle[1] = GoalAngle[1] + 180;
 		GoalAngle[2] = GoalAngle[2] + 180;
 
-		SyncDriveAngle(GoalAngle);
+		printf("GoalAngle[0]: %f \n",GoalAngle[0]);
+		printf("GoalAngle[1]: %f \n",GoalAngle[1]);
+		printf("GoalAngle[2]: %f \n",GoalAngle[2]);
 
-		// CheckTo make sure the robot is stop before driving to the next goal point
-		IsAllStop();
-		printf("GotoPoint: Success go to point (%f, %f, %f) \n", X,Y,Z);
-
+		// Check whether the feeding value is Nan or not, if Nan then don't drive the servo
+		if ( (isnan(GoalAngle[0]) != 1) && (isnan(GoalAngle[1]) != 1) && (isnan(GoalAngle[2]) != 1) )
+		{
+			SyncDriveAngle(GoalAngle);
+			// CheckTo make sure the robot is stop before driving to the next goal point
+			IsAllStop();
+			printf("GotoPoint: Success go to point (%f, %f, %f) \n", X,Y,Z);
+		}
+		
 	}
 	else
 	{
